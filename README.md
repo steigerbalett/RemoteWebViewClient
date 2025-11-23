@@ -14,6 +14,7 @@ The latest version of the client is implemented as an ESPHome external component
 
 - Add your credentials to secrets.yaml
 ![ESPHome Builder](/images/image-002.jpg)
+(If you dont use the secret.yaml you could also change all !secret in the code directly)
 - Change the substitutions according to your needs.
 
 ```yaml
@@ -209,7 +210,7 @@ text:
 ### Variables to change 
 | YAML variable    | Example            | Description  |
 |------------------|--------------------|--------------|
-| name             | esp32-4848s040     | Name of the display |
+| name             | esp32-<mac>     | Name of the display |
 | number           | 1                  | Consecutive number of the display |
 | friendly_name    | ESP32-Display Kitchen | Name in HA |
 | haip             | homeassistant       | Your Home Assistant url or IP |
