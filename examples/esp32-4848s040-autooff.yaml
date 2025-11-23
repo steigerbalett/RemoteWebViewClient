@@ -133,15 +133,9 @@ touchscreen:
   display: espdisplay_${number}
   on_touch:
     then:
-      - if:
-          condition:
-            lambda: |-
-              return !id(back_light).current_values.is_on();
-          then:
-            - light.turn_on:
-                id: back_light
-                brightness: 1.0
-          else:
+      - light.turn_on:
+          id: back_light
+          brightness: 1.0
 
 script:
   - id: reset_backlight_timer
@@ -191,3 +185,4 @@ text:
             ESP_LOGI("remote_webview", "URL queued (not connected): %s", x.c_str());
 
           }
+
