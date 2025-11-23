@@ -133,9 +133,23 @@ touchscreen:
   display: espdisplay_${number}
   on_touch:
     then:
-      - light.turn_on:
-          id: back_light
-          brightness: 1.0
+      - if:
+          condition:
+            lambda: |-
+              return !id(back_light).current_values.is_on();
+          then:
+            - light.turn_on:
+                id: back_light
+                brightness: 1.0
+          else:
+            - lambda: |-
+                if (touch_points.size() > 0) {
+                  const auto &tp = touch_points[0];
+                  id(rwv).ws_send_touch_event_(
+                    esphome::remote_webview::proto::TouchType::Down,
+                    tp.x, tp.y, tp.id
+                  );
+                }
 
 script:
   - id: reset_backlight_timer
