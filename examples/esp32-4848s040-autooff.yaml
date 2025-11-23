@@ -142,14 +142,6 @@ touchscreen:
                 id: back_light
                 brightness: 1.0
           else:
-            - lambda: |-
-                if (touch_points.size() > 0) {
-                  const auto &tp = touch_points[0];
-                  id(rwv).ws_send_touch_event_(
-                    esphome::remote_webview::proto::TouchType::Down,
-                    tp.x, tp.y, tp.id
-                  );
-                }
 
 script:
   - id: reset_backlight_timer
@@ -197,4 +189,5 @@ text:
           if (!id(rwv).open_url(std::string(x.c_str()))) {
             id(rwv).set_url(std::string(x.c_str()));
             ESP_LOGI("remote_webview", "URL queued (not connected): %s", x.c_str());
+
           }
