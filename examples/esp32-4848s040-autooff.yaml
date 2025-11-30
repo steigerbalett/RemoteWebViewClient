@@ -11,7 +11,10 @@ esphome:
   friendly_name:  ${friendly_name}
   platformio_options:
     board_build.flash_mode: dio
-    board_build.flash_mode: dio
+    on_boot:
+    priority: -100
+    then:
+      - script.execute: inactivity_timer
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -29,8 +32,6 @@ esp32:
     components:
       - name: "espressif/esp_websocket_client"
         ref: 1.5.0
-      - name: "espressif/esp-dsp"
-        ref: 1.7.0
       - name: "bitbank2/jpegdec"
         source: https://github.com/strange-v/jpegdec-esphome
 
@@ -133,16 +134,26 @@ touchscreen:
   display: espdisplay_${number}
   on_touch:
     then:
-      - light.turn_on:
-          id: back_light
-          brightness: 1.0
+      - script.execute: inactivity_timer
 
 script:
-  - id: reset_backlight_timer
+  - id: inactivity_timer
     mode: restart
     then:
-      - delay: ${delay}
-      - light.turn_off: back_light
+      - if:
+          condition:
+            light.is_off: back_light
+          then:
+            - light.turn_on:
+                id: back_light
+            - delay: 0.5s
+            - lambda: |-
+                id(rwv).disable_touch(false);
+      - delay: 15s
+      - light.turn_off:
+          id: back_light
+      - lambda: |-
+          id(rwv).disable_touch(true);
 
 output:
   - platform: ledc
@@ -154,10 +165,6 @@ light:
     output: backlight_pwm
     name: "Display Backlight"
     id: back_light
-    restore_mode: ALWAYS_ON
-    on_turn_on:
-      then:
-        - script.execute: reset_backlight_timer
 
 remote_webview:
   id: rwv
@@ -185,4 +192,5 @@ text:
             ESP_LOGI("remote_webview", "URL queued (not connected): %s", x.c_str());
 
           }
+
 
