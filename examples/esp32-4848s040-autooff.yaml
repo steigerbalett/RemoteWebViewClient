@@ -165,6 +165,9 @@ light:
     output: backlight_pwm
     name: "Display Backlight"
     id: back_light
+    on_turn_on:
+      then:
+        - script.execute: inactivity_timer
 
 remote_webview:
   id: rwv
@@ -192,5 +195,6 @@ text:
             ESP_LOGI("remote_webview", "URL queued (not connected): %s", x.c_str());
 
           }
+
 
 
