@@ -1,3 +1,5 @@
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct-single.svg)](https://stand-with-ukraine.pp.ua)
+
 # Remote WebView Client
 
 ![Guition-ESP32-S3-4848S040 running Remote WebView](/images/image-001.jpg)
@@ -49,8 +51,6 @@ esp32:
     components:
       - name: "espressif/esp_websocket_client"
         ref: 1.5.0
-      - name: "espressif/esp-dsp"
-        ref: 1.7.0
       - name: "bitbank2/jpegdec"
         source: https://github.com/strange-v/jpegdec-esphome
 
@@ -220,8 +220,8 @@ text:
 ### Supported Parameters
 | YAML key                | Type      | Required | Example                          | Description |
 |-------------------------|-----------|:--------:|----------------------------------|-------------|
-| `display_id`            | id        | ❌       | `panel`                          | Display to draw on. Optional, if only one display is defined in the YAML.|
-| `touchscreen_id`        | id        | ❌       | `touch`                          | Touch input source. Optional, if only one touchscreen is defined in the YAML. |
+| `display_id`            | id        | ❌       | `panel`                           | Display to draw on. Optional, if only one display is defined in the YAML.|
+| `touchscreen_id`        | id        | ❌       | `touch`                           | Touch input source. Optional, if only one touchscreen is defined in the YAML. |
 | `server`                | string    | ✅       | `172.16.0.252:8081`              | WebSocket server address. Must be `hostname_or_IP:port`. |
 | `url`                   | string    | ✅       | `http://…/dashboard`             | Page to open on connect. |
 | `device_id`             | string    | ❌       | `"my-device"` or auto (`esp32-<mac>`) | Identifier used by the server. If not set, the component derives `esp32-<mac>` from the chip MAC and still sends it. |
@@ -237,6 +237,7 @@ text:
 | `rotation`              | int       | ❌       | 0, 90, 180, 270                   | Enables software rotation for both the display and touchscreen. |
 
 ## Recommendations
+
 - **full_frame_tile_count** set to 1 is the most efficient way to do a full-screen update; use it if your network/device memory allows it.
 - **every_nth_frame** must be 1 if you don’t want to miss changes (though increasing it may reduce server load). I recommend keeping it set to 1.
 - **min_frame_interval** should be slightly larger than the render time reported by the self-test (set `self-test` as a url parameter in the YAML).
