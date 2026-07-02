@@ -21,19 +21,27 @@ The latest version of the client is implemented as an ESPHome external component
 
 ```yaml
 substitutions:
-  name: esp32-4848s040          # Name of the display
-  number: 1                     # Consecutive number of the display
-  friendly_name: ESP32-Display Kitchen 
-  haip: homeassistant           # Your Home Assistant url or IP
-  starturl: https://github.com  # Set url: "self-test" to initiate the self-test
-  delay: 5min                   # Time till displaybacklight turns off. Possible: s/min/h
-                                # If you want the display to stay always on, use the alwayson.yaml example
+  name: esp32-4848s040                                  # Name of the display
+  number: 1                                             # Consecutive number of the display
+  friendly_name: ESP32-Display Kitchen                  # Name in HA
+  haip: homeassistant                                   # Your Home Assistant url or IP
+  starturl: http://homeassistant:8123/config/dashboard  # Set url: "self-test" to initiate the self-test
+  delay: 5min                                           # Time till displaybacklight turns off. Possible: s/min/h
+
+# Enable logging
+logger:
+  hardware_uart: UART0
+
 esphome:
-  name: ${name}-${number}
-  friendly_name:  ${friendly_name}
+  name: ${espname}-${number}
+  name_add_mac_suffix: false
+  friendly_name: ${friendly_name}
   platformio_options:
     board_build.flash_mode: dio
-    board_build.flash_mode: dio
+  on_boot:
+    priority: -100
+    then:
+      - script.execute: inactivity_timer
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -48,9 +56,12 @@ esp32:
       CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
       CONFIG_SPIRAM_RODATA: y
+#      CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
     components:
       - name: "espressif/esp_websocket_client"
-        ref: 1.5.0
+        ref: 1.7.0
+      - name: "espressif/esp-dsp"
+        ref: 1.8.2
       - name: "bitbank2/jpegdec"
         source: https://github.com/strange-v/jpegdec-esphome
 
@@ -58,14 +69,7 @@ psram:
   mode: octal
   speed: 80MHz
 
-external_components:
-  - source: github://strange-v/RemoteWebViewClient@main
-    refresh: 0s
-    components: [ remote_webview ]
-
-logger:
-  hardware_uart: UART0
-
+# Enable Home Assistant API
 api:
   encryption:
     key: !secret api_encryption_key
@@ -77,12 +81,18 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Display Fallback Hotspot"
     password: ""
 
 captive_portal:
-    
+
+external_components:
+  - source: github://strange-v/RemoteWebViewClient@main
+    refresh: 0s
+    components: [ remote_webview ]
+ 
 spi:
   clk_pin: GPIO48
   mosi_pin: GPIO47
@@ -153,42 +163,53 @@ touchscreen:
   display: espdisplay_${number}
   on_touch:
     then:
-      - light.turn_on:
-          id: back_light
-          brightness: 1.0
+      - script.execute: inactivity_timer
 
 script:
-  - id: reset_backlight_timer
+  - id: inactivity_timer
     mode: restart
     then:
+      - if:
+          condition:
+            light.is_off: back_light
+          then:
+            - light.turn_on:
+                id: back_light
+            - delay: 0.5s
+            - lambda: |-
+                id(rwv).disable_touch(false);
       - delay: ${delay}
-      - light.turn_off: back_light
+      - light.turn_off:
+          id: back_light
+      - lambda: |-
+          id(rwv).disable_touch(true);
 
 output:
   - platform: ledc
     pin: GPIO38
     id: backlight_pwm
+    frequency: 500Hz #neu
 
 light:
   - platform: monochromatic
     output: backlight_pwm
     name: "Display Backlight"
     id: back_light
-    restore_mode: ALWAYS_ON
+#    restore_mode: ALWAYS_ON
     on_turn_on:
       then:
-        - script.execute: reset_backlight_timer
+        - script.execute: inactivity_timer
 
 remote_webview:
   id: rwv
   display_id: espdisplay_${number}
   touchscreen_id: esptouchscreen_${number}
-  device_id: ${name}
+  device_id: ${espname}-${number}
   server: ${haip}:8081
   url: ${starturl}
   full_frame_tile_count: 1
   max_bytes_per_msg: 61440
-  jpeg_quality: 85
+  jpeg_quality: 80
 
 text:
   - platform: template
@@ -204,6 +225,11 @@ text:
             id(rwv).set_url(std::string(x.c_str()));
             ESP_LOGI("remote_webview", "URL queued (not connected): %s", x.c_str());
           }
+
+button:
+  - platform: restart
+    name: restart
+    id: button_restart_1
 
 ```
 
